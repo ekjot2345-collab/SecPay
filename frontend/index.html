@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
   <meta name="description" content="SecPay secure payments dashboard with immersive 3D animated interface">
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
   <canvas id="particle-canvas"></canvas>
@@ -38,7 +40,8 @@
     <!-- Balance Card -->
     <section class="card balance-card" data-tilt>
       <div class="balance-total-label">Total Coins</div>
-      <div class="balance-total-val"><span id="balanceCounter">0</span> <span style="font-size:24px;color:var(--text-muted);font-family:'Inter',sans-serif;">Coins</span></div>
+      <div class="balance-total-val"><span id="balanceCounter">0</span> <span
+          style="font-size:24px;color:var(--text-muted);font-family:'Inter',sans-serif;">Coins</span></div>
 
       <div class="state-grid">
         <div class="state-box box-avail">
@@ -72,14 +75,18 @@
           <div class="escrow-timer-label">Unlocks soon</div>
         </div>
       </div>
-      <div class="progress-bar"><div class="progress-fill" id="escrowProgress"></div></div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="escrowProgress"></div>
+      </div>
     </section>
 
     <!-- Transaction History -->
     <section class="card tx-card" data-tilt>
       <div class="tx-header">
         <div class="tx-title serif">Transaction History</div>
-        <div class="tx-subtitle">Each transaction earns coins, split into <span style="color:var(--avail-glow)">Spendable</span> &amp; <span style="color:#f87171">Locked</span> based on risk score</div>
+        <div class="tx-subtitle">Each transaction earns coins, split into <span
+            style="color:var(--avail-glow)">Spendable</span> &amp; <span style="color:#f87171">Locked</span> based on
+          risk score</div>
       </div>
 
       <div class="pay-table" id="payTable">
@@ -110,14 +117,17 @@
     <!-- Action -->
     <button class="btn btn-primary" id="redeemBtn">
       <span>Redeem Spendable Coins</span>
-      <span id="redeemBadge" style="background:rgba(255,255,255,0.15);padding:2px 8px;border-radius:10px;font-size:12px;margin-left:auto;">0 Coins</span>
+      <span id="redeemBadge"
+        style="background:rgba(255,255,255,0.15);padding:2px 8px;border-radius:10px;font-size:12px;margin-left:auto;">0
+        Coins</span>
     </button>
 
     <!-- Notice -->
     <div class="notice">
       <div class="notice-icon">ℹ️</div>
       <div class="notice-text">
-        <strong>RBI Security Mandate:</strong> To protect your account, rewards earned from 🌍 International transactions are placed in a secure Escrow and automatically unlocked after 24 hours.
+        <strong>RBI Security Mandate:</strong> To protect your account, rewards earned from 🌍 International
+        transactions are placed in a secure Escrow and automatically unlocked after 24 hours.
       </div>
     </div>
   </div>
@@ -127,7 +137,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
     /* ── Three.js Particle Nebula ── */
-    (function(){
+    (function () {
       const canvas = document.getElementById('particle-canvas');
       const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -149,11 +159,11 @@
       ];
 
       for (let i = 0; i < count; i++) {
-        pos[i*3]   = (Math.random() - 0.5) * 120;
-        pos[i*3+1] = (Math.random() - 0.5) * 120;
-        pos[i*3+2] = (Math.random() - 0.5) * 80;
+        pos[i * 3] = (Math.random() - 0.5) * 120;
+        pos[i * 3 + 1] = (Math.random() - 0.5) * 120;
+        pos[i * 3 + 2] = (Math.random() - 0.5) * 80;
         const c = palette[Math.floor(Math.random() * palette.length)];
-        colors[i*3] = c[0]; colors[i*3+1] = c[1]; colors[i*3+2] = c[2];
+        colors[i * 3] = c[0]; colors[i * 3 + 1] = c[1]; colors[i * 3 + 2] = c[2];
       }
       geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
       geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
@@ -196,7 +206,7 @@
         const x = (e.clientX - r.left) / r.width - 0.5;
         const y = (e.clientY - r.top) / r.height - 0.5;
         card.style.transform = `rotateY(${x * 8}deg) rotateX(${-y * 8}deg) scale(1.01)`;
-        card.style.boxShadow = `${-x*20}px ${y*20}px 40px rgba(139,92,246,0.12)`;
+        card.style.boxShadow = `${-x * 20}px ${y * 20}px 40px rgba(139,92,246,0.12)`;
       });
       card.addEventListener('mouseleave', () => {
         card.style.transform = ''; card.style.boxShadow = '';
@@ -204,7 +214,7 @@
     });
 
     /* ── Animated Counter ── */
-    (function(){
+    (function () {
       const el = document.getElementById('balanceCounter');
       const target = 4200;
       const duration = 1500;
@@ -222,8 +232,8 @@
     let timeRemaining = 24 * 3600 - 1;
     const timerEl = document.getElementById('countdown');
     function fmt(s) {
-      const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
-      return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+      const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
     }
     setInterval(() => {
       if (timeRemaining > 0) {
@@ -239,14 +249,14 @@
 
     /* ── Redeem with Ripple ── */
     const btn = document.getElementById('redeemBtn');
-    btn.addEventListener('click', function(e) {
+    btn.addEventListener('click', function (e) {
       const r = this.getBoundingClientRect();
       const ripple = document.createElement('span');
       ripple.className = 'ripple';
       const size = Math.max(r.width, r.height);
       ripple.style.width = ripple.style.height = size + 'px';
-      ripple.style.left = (e.clientX - r.left - size/2) + 'px';
-      ripple.style.top = (e.clientY - r.top - size/2) + 'px';
+      ripple.style.left = (e.clientX - r.left - size / 2) + 'px';
+      ripple.style.top = (e.clientY - r.top - size / 2) + 'px';
       this.appendChild(ripple);
       setTimeout(() => ripple.remove(), 600);
 
@@ -277,8 +287,8 @@
     async function loadData() {
       try {
         const [txRes, balRes] = await Promise.all([
-          fetch('/transactions'),
-          fetch('/balance')
+          fetch('http://localhost:3000/transactions'),
+          fetch('http://localhost:3000/balance')
         ]);
         const txs = await txRes.json();
         const bal = await balRes.json();
@@ -297,7 +307,7 @@
         // Render Table
         const payTable = document.getElementById('payTable');
         payTable.innerHTML = '';
-        
+
         txs.forEach((tx, i) => {
           let indClass = 'ind-clean', scoreClass = 'score-green', splitClass = 'split-green', pillClass = 'pill-avail';
           if (tx.status === 'Review') {
@@ -305,11 +315,11 @@
           } else if (tx.status === 'High risk') {
             indClass = 'ind-danger'; scoreClass = 'score-red'; splitClass = 'split-red'; pillClass = 'pill-danger';
           }
-          
+
           const pct = Math.round((tx.spendableCoins / tx.totalCoins) * 100);
 
           const rowHtml = `
-            <div class="pay-row ${tx.status==='High risk'?'pay-row-danger':''}" style="opacity:0; transform:translateY(20px);">
+            <div class="pay-row ${tx.status === 'High risk' ? 'pay-row-danger' : ''}" style="opacity:0; transform:translateY(20px);">
               <div class="pay-indicator ${indClass}"></div>
               <div class="pay-transfer">
                 <div class="transfer-from">
@@ -341,7 +351,7 @@
             if (e.isIntersecting) { e.target.style.opacity = '1'; e.target.style.transform = 'translateY(0)'; }
           });
         }, { threshold: 0.1 });
-        
+
         document.querySelectorAll('.pay-row').forEach((el, i) => {
           el.style.transition = `all 0.5s ease ${i * 0.1}s`;
           obs.observe(el);
@@ -356,4 +366,5 @@
     loadData();
   </script>
 </body>
+
 </html>
