@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SecPay — Secure Payments Dashboard</title>
+  <meta name="description" content="SecPay secure payments dashboard with immersive 3D animated interface">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <canvas id="particle-canvas"></canvas>
+
+  <div class="container" id="appContainer">
+
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <div class="logo-cube">
+          <div class="cube">
+            <div class="cube-face cube-front">S</div>
+            <div class="cube-face cube-back">P</div>
+            <div class="cube-face cube-left">e</div>
+            <div class="cube-face cube-right">c</div>
+          </div>
+        </div>
+        <div class="logo-text">SecPay</div>
+      </div>
+      <div class="avatar">AK</div>
+    </header>
+
+    <!-- Title -->
+    <section class="title-section">
+      <h1>Your Rewards</h1>
+      <p>Manage your earned points across all regions.</p>
+    </section>
+
+    <!-- Balance Card -->
+    <section class="card balance-card" data-tilt>
+      <div class="balance-total-label">Total Coins</div>
+      <div class="balance-total-val"><span id="balanceCounter">0</span> <span style="font-size:24px;color:var(--text-muted);font-family:'Inter',sans-serif;">Coins</span></div>
+
+      <div class="state-grid">
+        <div class="state-box box-avail">
+          <div class="state-icon">🟢</div>
+          <div class="state-label">Spendable</div>
+          <div class="state-amt" id="topSpendable">0</div>
+        </div>
+        <div class="state-box box-lock">
+          <div class="state-icon">🔒</div>
+          <div class="state-label">Locked</div>
+          <div class="state-amt" id="topLocked">0</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Escrow Card -->
+    <section class="card escrow-card" data-tilt>
+      <div class="escrow-header">
+        <div class="escrow-title"><i>🌍</i> International Escrow</div>
+      </div>
+      <div class="escrow-item">
+        <div class="escrow-info">
+          <div class="escrow-icon">US</div>
+          <div>
+            <div class="escrow-name">GlobalTech Payment <span class="escrow-tag">Escrow</span></div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">+1,000 Pts</div>
+          </div>
+        </div>
+        <div class="escrow-timer-wrap">
+          <div class="escrow-timer" id="countdown">23:59:59</div>
+          <div class="escrow-timer-label">Unlocks soon</div>
+        </div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="escrowProgress"></div></div>
+    </section>
+
+    <!-- Transaction History -->
+    <section class="card tx-card" data-tilt>
+      <div class="tx-header">
+        <div class="tx-title serif">Transaction History</div>
+        <div class="tx-subtitle">Each transaction earns coins, split into <span style="color:var(--avail-glow)">Spendable</span> &amp; <span style="color:#f87171">Locked</span> based on risk score</div>
+      </div>
+
+      <div class="pay-table" id="payTable">
+        <div style="text-align:center; padding:40px; color:var(--text-dim)">Loading transactions...</div>
+      </div>
+
+      <!-- Totals -->
+      <div class="pay-totals">
+        <div class="pay-total-item total-txn">
+          <span class="total-label">💸 Total Transferred</span>
+          <span class="total-val" id="footTotalTransferred">₹0</span>
+        </div>
+        <div class="pay-total-item total-coins">
+          <span class="total-label">🪙 Total Coins</span>
+          <span class="total-val" id="footTotalCoins">0</span>
+        </div>
+        <div class="pay-total-item total-spendable">
+          <span class="total-label">🟢 Spendable</span>
+          <span class="total-val" id="footSpendable">0</span>
+        </div>
+        <div class="pay-total-item total-locked">
+          <span class="total-label">🔒 Locked</span>
+          <span class="total-val" id="footLocked">0</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Action -->
+    <button class="btn btn-primary" id="redeemBtn">
+      <span>Redeem Spendable Coins</span>
+      <span id="redeemBadge" style="background:rgba(255,255,255,0.15);padding:2px 8px;border-radius:10px;font-size:12px;margin-left:auto;">0 Coins</span>
+    </button>
+
+    <!-- Notice -->
+    <div class="notice">
+      <div class="notice-icon">ℹ️</div>
+      <div class="notice-text">
+        <strong>RBI Security Mandate:</strong> To protect your account, rewards earned from 🌍 International transactions are placed in a secure Escrow and automatically unlocked after 24 hours.
+      </div>
+    </div>
+  </div>
+
+  <div id="toast">Points redeemed successfully!</div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    /* ── Three.js Particle Nebula ── */
+    (function(){
+      const canvas = document.getElementById('particle-canvas');
+      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 50;
+
+      const count = 600;
+      const geo = new THREE.BufferGeometry();
+      const pos = new Float32Array(count * 3);
+      const colors = new Float32Array(count * 3);
+      const palette = [
+        [0.545, 0.361, 0.965], // purple
+        [0.851, 0.275, 0.937], // pink
+        [0.133, 0.827, 0.933], // cyan
+        [0.204, 0.831, 0.600], // green
+      ];
+
+      for (let i = 0; i < count; i++) {
+        pos[i*3]   = (Math.random() - 0.5) * 120;
+        pos[i*3+1] = (Math.random() - 0.5) * 120;
+        pos[i*3+2] = (Math.random() - 0.5) * 80;
+        const c = palette[Math.floor(Math.random() * palette.length)];
+        colors[i*3] = c[0]; colors[i*3+1] = c[1]; colors[i*3+2] = c[2];
+      }
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+      const mat = new THREE.PointsMaterial({
+        size: 0.4, vertexColors: true, transparent: true, opacity: 0.7,
+        blending: THREE.AdditiveBlending, depthWrite: false
+      });
+      const points = new THREE.Points(geo, mat);
+      scene.add(points);
+
+      let mouseX = 0, mouseY = 0;
+      document.addEventListener('mousemove', e => {
+        mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+        mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+      });
+
+      function animate() {
+        requestAnimationFrame(animate);
+        points.rotation.y += 0.0008;
+        points.rotation.x += 0.0003;
+        camera.position.x += (mouseX * 5 - camera.position.x) * 0.02;
+        camera.position.y += (-mouseY * 5 - camera.position.y) * 0.02;
+        camera.lookAt(scene.position);
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    })();
+
+    /* ── 3D Card Tilt ── */
+    document.querySelectorAll('[data-tilt]').forEach(card => {
+      card.addEventListener('mousemove', e => {
+        const r = card.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width - 0.5;
+        const y = (e.clientY - r.top) / r.height - 0.5;
+        card.style.transform = `rotateY(${x * 8}deg) rotateX(${-y * 8}deg) scale(1.01)`;
+        card.style.boxShadow = `${-x*20}px ${y*20}px 40px rgba(139,92,246,0.12)`;
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = ''; card.style.boxShadow = '';
+      });
+    });
+
+    /* ── Animated Counter ── */
+    (function(){
+      const el = document.getElementById('balanceCounter');
+      const target = 4200;
+      const duration = 1500;
+      const start = performance.now();
+      function tick(now) {
+        const p = Math.min((now - start) / duration, 1);
+        const ease = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.floor(target * ease).toLocaleString();
+        if (p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    })();
+
+    /* ── Countdown Timer ── */
+    let timeRemaining = 24 * 3600 - 1;
+    const timerEl = document.getElementById('countdown');
+    function fmt(s) {
+      const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+      return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+    }
+    setInterval(() => {
+      if (timeRemaining > 0) {
+        timeRemaining--;
+        timerEl.textContent = fmt(timeRemaining);
+        timerEl.style.transform = 'scale(1.08)';
+        setTimeout(() => timerEl.style.transform = 'scale(1)', 150);
+      }
+    }, 1000);
+
+    /* ── Progress Bar ── */
+    setTimeout(() => { document.getElementById('escrowProgress').style.width = '15%'; }, 500);
+
+    /* ── Redeem with Ripple ── */
+    const btn = document.getElementById('redeemBtn');
+    btn.addEventListener('click', function(e) {
+      const r = this.getBoundingClientRect();
+      const ripple = document.createElement('span');
+      ripple.className = 'ripple';
+      const size = Math.max(r.width, r.height);
+      ripple.style.width = ripple.style.height = size + 'px';
+      ripple.style.left = (e.clientX - r.left - size/2) + 'px';
+      ripple.style.top = (e.clientY - r.top - size/2) + 'px';
+      this.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+
+      const toast = document.getElementById('toast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    });
+
+    /* ── Counter Animation ── */
+    function animateCounter(id, target, duration) {
+      let start = 0;
+      const el = document.getElementById(id);
+      if (!el) return;
+      const increment = target / (duration / 16);
+      function step() {
+        start += increment;
+        if (start < target) {
+          el.innerText = Math.floor(start).toLocaleString();
+          requestAnimationFrame(step);
+        } else {
+          el.innerText = target.toLocaleString();
+        }
+      }
+      step();
+    }
+
+    /* ── Fetch Data from Backend ── */
+    async function loadData() {
+      try {
+        const [txRes, balRes] = await Promise.all([
+          fetch('/transactions'),
+          fetch('/balance')
+        ]);
+        const txs = await txRes.json();
+        const bal = await balRes.json();
+
+        // Update Totals
+        document.getElementById('topSpendable').innerText = bal.spendableCoins.toLocaleString();
+        document.getElementById('topLocked').innerText = bal.lockedCoins.toLocaleString();
+        document.getElementById('footTotalTransferred').innerText = '₹' + bal.totalTransferred.toLocaleString();
+        document.getElementById('footTotalCoins').innerText = bal.totalCoins.toLocaleString();
+        document.getElementById('footSpendable').innerText = bal.spendableCoins.toLocaleString();
+        document.getElementById('footLocked').innerText = bal.lockedCoins.toLocaleString();
+        document.getElementById('redeemBadge').innerText = bal.spendableCoins.toLocaleString() + ' Coins';
+
+        animateCounter('balanceCounter', bal.totalCoins, 2000);
+
+        // Render Table
+        const payTable = document.getElementById('payTable');
+        payTable.innerHTML = '';
+        
+        txs.forEach((tx, i) => {
+          let indClass = 'ind-clean', scoreClass = 'score-green', splitClass = 'split-green', pillClass = 'pill-avail';
+          if (tx.status === 'Review') {
+            indClass = 'ind-review'; scoreClass = 'score-yellow'; splitClass = 'split-yellow'; pillClass = 'pill-lock';
+          } else if (tx.status === 'High risk') {
+            indClass = 'ind-danger'; scoreClass = 'score-red'; splitClass = 'split-red'; pillClass = 'pill-danger';
+          }
+          
+          const pct = Math.round((tx.spendableCoins / tx.totalCoins) * 100);
+
+          const rowHtml = `
+            <div class="pay-row ${tx.status==='High risk'?'pay-row-danger':''}" style="opacity:0; transform:translateY(20px);">
+              <div class="pay-indicator ${indClass}"></div>
+              <div class="pay-transfer">
+                <div class="transfer-from">
+                  <span class="acct-badge acct-bank">${tx.transferFrom.bank}</span>
+                  <span class="acct-name">${tx.transferFrom.name}</span>
+                </div>
+                <div class="transfer-arrow">→</div>
+                <div class="transfer-to">
+                  <span class="acct-badge acct-merchant">${tx.transferTo.merchant}</span>
+                </div>
+              </div>
+              <div class="pay-txn-value">₹${tx.amount.toLocaleString()}</div>
+              <div class="pay-coin-total">${tx.totalCoins.toLocaleString()}</div>
+              <div class="pay-score ${scoreClass}">${tx.riskScore}</div>
+              <div class="pay-coins">
+                <div class="coin-row"><span class="coin-icon">🟢</span><span class="coin-spendable">${tx.spendableCoins.toLocaleString()}</span></div>
+                <div class="coin-row"><span class="coin-icon">🔒</span><span class="coin-locked">${tx.lockedCoins.toLocaleString()}</span></div>
+              </div>
+              <div class="pay-split-bar"><div class="split-fill ${splitClass}" style="width:${pct}%"></div></div>
+              <div class="pay-status"><span class="pill ${pillClass}">${tx.status}</span></div>
+            </div>
+          `;
+          payTable.insertAdjacentHTML('beforeend', rowHtml);
+        });
+
+        // Trigger Animations
+        const obs = new IntersectionObserver(entries => {
+          entries.forEach(e => {
+            if (e.isIntersecting) { e.target.style.opacity = '1'; e.target.style.transform = 'translateY(0)'; }
+          });
+        }, { threshold: 0.1 });
+        
+        document.querySelectorAll('.pay-row').forEach((el, i) => {
+          el.style.transition = `all 0.5s ease ${i * 0.1}s`;
+          obs.observe(el);
+        });
+
+      } catch (err) {
+        console.error("Error loading data:", err);
+        document.getElementById('payTable').innerHTML = '<div style="text-align:center; padding:40px; color:#f87171">Error loading transactions. Make sure backend is running.</div>';
+      }
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
